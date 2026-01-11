@@ -1,0 +1,603 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}Notifikacije - BarterApp{% endblock %}
+
+{% block content %}
+<style>
+    /* ==================== PAGE HEADER ==================== */
+    .notifications-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin: -30px 0 40px 0;
+        border-radius: 0 0 25px 25px;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
+    }
+
+    .notifications-header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        letter-spacing: -0.5px;
+    }
+
+    .notifications-header p {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    /* ==================== NOTIFICATIONS CONTAINER ==================== */
+    .notifications-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 40px;
+    }
+
+    /* ==================== NOTIFICATION ITEM ==================== */
+    .notification-item {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 4px solid #667eea;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .notification-item:hover {
+        transform: translateX(4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        border-left-color: #764ba2;
+    }
+
+    .notification-item.unread {
+        background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+        border-left-color: #667eea;
+    }
+
+    .notification-item.read {
+        opacity: 0.75;
+        border-left-color: #cbd5e0;
+    }
+
+    /* ==================== NOTIFICATION ICON ==================== */
+    .notification-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        font-size: 1.2rem;
+    }
+
+    .notification-icon.trade {
+        background: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+    }
+
+    .notification-icon.message {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .notification-icon.review {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+
+    .notification-icon.alert {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .notification-icon.error {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    /* ==================== NOTIFICATION CONTENT ==================== */
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        gap: 10px;
+    }
+
+    .notification-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .notification-time {
+        font-size: 0.8rem;
+        color: #a0aec0;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .notification-message {
+        font-size: 0.9rem;
+        color: #718096;
+        margin: 0 0 10px 0;
+        line-height: 1.4;
+    }
+
+    .notification-meta {
+        display: flex;
+        gap: 15px;
+        font-size: 0.8rem;
+        color: #a0aec0;
+        flex-wrap: wrap;
+    }
+
+    .notification-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .notification-meta-item .badge {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+    }
+
+    /* ==================== UNREAD BADGE ==================== */
+    .unread-badge {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #667eea;
+        flex-shrink: 0;
+        animation: pulse-badge 2s infinite;
+    }
+
+    @keyframes pulse-badge {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    /* ==================== EMPTY STATE ==================== */
+    .empty-notifications {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-notifications i {
+        font-size: 4rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    .empty-notifications h3 {
+        font-size: 1.3rem;
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .empty-notifications p {
+        color: #718096;
+        margin: 0;
+    }
+
+    /* ==================== FILTERS ==================== */
+    .notification-filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: #718096;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        border-color: #667eea;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* ==================== MARK ALL BUTTON ==================== */
+    .mark-all-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        gap: 15px;
+    }
+
+    .mark-all-btn {
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mark-all-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    /* ==================== STATS ==================== */
+    .notification-stats {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border-left: 4px solid #667eea;
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .stat-card.unread {
+        border-left-color: #667eea;
+    }
+
+    .stat-card.total {
+        border-left-color: #764ba2;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #a0aec0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2d3748;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+        .notifications-header {
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+
+        .notifications-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .notification-item {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .notification-header {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .notification-time {
+            margin-left: 0;
+        }
+
+        .mark-all-container {
+            flex-direction: column-reverse;
+        }
+
+        .notification-filters {
+            width: 100%;
+            order: 2;
+        }
+
+        .stat-card {
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .notifications-header h1 {
+            font-size: 1.2rem;
+        }
+
+        .notification-item {
+            padding: 15px;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+
+        .notification-filters {
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .mark-all-container {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mark-all-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .notification-stats {
+            gap: 10px;
+        }
+
+        .stat-card {
+            padding: 12px 15px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Notifications Header -->
+<div class="notifications-header">
+    <div class="container">
+        <h1>
+            <i class="fas fa-bell me-2"></i>Notifikacije
+        </h1>
+        <p>Prati sve važne poruke i obavijesti</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    {% if notifications %}
+        <!-- Statistics -->
+        <div class="notification-stats">
+            <div class="stat-card total">
+                <div class="stat-label">Ukupno notifikacija</div>
+                <div class="stat-value">{{ page_obj.paginator.count }}</div>
+            </div>
+            <div class="stat-card unread">
+                <div class="stat-label">Nepročitane</div>
+                <div class="stat-value">
+                    {% with unread_count=notifications|dictsort:"is_read"|length %}
+                        {{ unread_count }}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mark All & Filters -->
+        <div class="mark-all-container">
+            <a href="?mark_all_read=1" class="mark-all-btn">
+                <i class="fas fa-check-double"></i>Označi sve kao pročitane
+            </a>
+            <div class="notification-filters">
+                <button class="filter-btn active" onclick="filterNotifications(event, 'all')">
+                    <i class="fas fa-list me-1"></i>Sve
+                </button>
+                <button class="filter-btn" onclick="filterNotifications(event, 'trade')">
+                    <i class="fas fa-exchange-alt me-1"></i>Razmene
+                </button>
+                <button class="filter-btn" onclick="filterNotifications(event, 'message')">
+                    <i class="fas fa-comment me-1"></i>Poruke
+                </button>
+                <button class="filter-btn" onclick="filterNotifications(event, 'review')">
+                    <i class="fas fa-star me-1"></i>Recenzije
+                </button>
+                <button class="filter-btn" onclick="filterNotifications(event, 'unread')">
+                    <i class="fas fa-circle me-1"></i>Nepročitane
+                </button>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="notifications-list" id="notificationsList">
+            {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}"
+                 data-type="{% if notification.notification_type == 'trade' %}trade{% elif notification.notification_type == 'review' %}review{% elif notification.notification_type == 'message' %}message{% else %}alert{% endif %}">
+
+                <!-- Icon -->
+                <div class="notification-icon {% if notification.notification_type == 'trade' %}trade{% elif notification.notification_type == 'review' %}review{% elif notification.notification_type == 'message' %}message{% else %}alert{% endif %}">
+                    {% if notification.notification_type == 'trade' or notification.notification_type == 'trade_accepted' %}
+                        <i class="fas fa-exchange-alt"></i>
+                    {% elif notification.notification_type == 'review' %}
+                        <i class="fas fa-star"></i>
+                    {% elif notification.notification_type == 'message' %}
+                        <i class="fas fa-comment"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                </div>
+
+                <!-- Content -->
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <h4 class="notification-title">
+                            {{ notification.title }}
+                            {% if not notification.is_read %}<span class="unread-badge"></span>{% endif %}
+                        </h4>
+                        <span class="notification-time">
+                            <i class="fas fa-clock"></i>{{ notification.created_at|date:"d. m. Y H:i" }}
+                        </span>
+
+                    </div>
+
+                    <p class="notification-message">
+                        {{ notification.message }}
+                    </p>
+
+                    <!-- Meta Info -->
+                    <div class="notification-meta">
+                        <div class="notification-meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            {{ notification.created_at|date:"d. m. Y H:i" }}
+                        </div>
+                        <div class="notification-meta-item">
+                            <i class="fas fa-tag"></i>
+                            {% if notification.notification_type == 'trade' %}
+                                <span class="badge bg-primary">Razmena</span>
+                            {% elif notification.notification_type == 'trade_accepted' %}
+                                <span class="badge bg-success">Prihvaćena razmena</span>
+                            {% elif notification.notification_type == 'review' %}
+                                <span class="badge bg-warning">Recenzija</span>
+                            {% elif notification.notification_type == 'message' %}
+                                <span class="badge bg-info">Poruka</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Obavijest</span>
+                            {% endif %}
+                        </div>
+                        {% if notification.is_read %}
+                        <div class="notification-meta-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span style="color: #22c55e;">Pročitano</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-5" aria-label="Paginacija">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">
+                        <i class="fas fa-step-backward me-1"></i>Prva
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-chevron-left me-1"></i>Prethodna
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        Sledeća<i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                        Poslednja<i class="fas fa-step-forward ms-1"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-notifications">
+            <i class="fas fa-bell-slash"></i>
+            <h3>Nemaš notifikacija</h3>
+            <p>Sve je mirno - čekaj nešto novo! 🌟</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function filterNotifications(event, type) {
+        event.preventDefault();
+
+        const notifications = document.querySelectorAll('.notification-item');
+        const buttons = document.querySelectorAll('.filter-btn');
+
+        // Update active button
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.closest('.filter-btn').classList.add('active');
+
+        // Filter notifications
+        notifications.forEach(notif => {
+            if (type === 'all') {
+                notif.style.display = 'flex';
+            } else if (type === 'unread') {
+                notif.style.display = notif.classList.contains('unread') ? 'flex' : 'none';
+            } else {
+                notif.style.display = notif.dataset.type === type ? 'flex' : 'none';
+            }
+        });
+    }
+</script>
+
+{% endblock %}

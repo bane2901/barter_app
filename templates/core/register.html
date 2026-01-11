@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Registracija - BarterApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-user-plus text-primary"></i> Kreiraj nalog
+                </h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="username">
+                            <i class="fas fa-user"></i> Korisničko ime
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               required placeholder="Unesi korisničko ime">
+                        <small class="text-muted">Minimalno 3 karaktera</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="email">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               required placeholder="tvoj@email.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="password">
+                            <i class="fas fa-lock"></i> Lozinka
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               required placeholder="Najmanje 6 karaktera">
+                        <small class="text-muted">Koristi jaku lozinku sa brojevima i znakovima</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="password2">
+                            <i class="fas fa-lock"></i> Potvrdi lozinku
+                        </label>
+                        <input type="password" class="form-control" id="password2" name="password2" 
+                               required placeholder="Ponovi lozinku">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-user-check"></i> Registruj se
+                    </button>
+                </form>
+                
+                <hr>
+                <p class="text-center">
+                    Već imaš nalog? 
+                    <a href="{% url 'core:login' %}" class="text-primary fw-bold">Prijavi se ovde</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

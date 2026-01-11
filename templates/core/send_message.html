@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+{% block title %}Pošalji poruku{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="mb-4">Pošalji poruku korisniku: <strong>{{ recipient.username }}</strong></h3>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Naslov (opciono)</label>
+                        <input type="text" name="subject" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Poruka</label>
+                        <textarea name="body" class="form-control" rows="5" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Pošalji</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

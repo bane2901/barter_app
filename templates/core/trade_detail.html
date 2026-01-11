@@ -1,0 +1,267 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Detalj razmene - Barter App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Osnovna informacija o razmeni -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="m-0">Detalj razmene #{{ trade.id }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Status:</h6>
+                            {% if trade.status == 'pending' %}
+                                <span class="badge bg-warning fs-6">⏳ Čekanje</span>
+                            {% elif trade.status == 'accepted' %}
+                                <span class="badge bg-success fs-6">✅ Prihvaćeno</span>
+                            {% elif trade.status == 'rejected' %}
+                                <span class="badge bg-danger fs-6">❌ Odbijeno</span>
+                            {% elif trade.status == 'completed' %}
+                                <span class="badge bg-info fs-6">🏁 Završeno</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">{{ trade.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Kreirano:</h6>
+                            <p>{{ trade.created_at|date:"d.m.Y H:i" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Poruka -->
+                    {% if trade.message %}
+                    <div class="alert alert-info">
+                        <h6>📧 Poruka:</h6>
+                        <p class="mb-0">{{ trade.message }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Ponude -->
+            <div class="row mb-4">
+                <!-- Ponuda 1 (user1) -->
+                {% if trade.offer1 %}
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="m-0">{{ trade.user1.username }} nudi</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6><a href="{% url 'core:offer_detail' trade.offer1.pk %}">{{ trade.offer1.title }}</a></h6>
+                            <p class="text-muted small">{{ trade.offer1.description|truncatewords:20 }}</p>
+                            <p class="mb-1"><strong>Grad:</strong> {{ trade.offer1.city }}</p>
+                            <p class="mb-1"><strong>Cena:</strong> {{ trade.offer1.price_range }}</p>
+                            <p class="mb-0"><strong>Vlasnik:</strong>
+                                <a href="{% url 'core:user_profile_view' trade.offer1.owner.username %}">
+                                    {{ trade.offer1.owner.username }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-md-6">
+                    <div class="card bg-light border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="m-0">⚠️ Ponuda nije odabrana</h5>
+                        </div>
+                        <div class="card-body text-center text-muted">
+                            <p class="mb-0">{{ trade.user1.username }} još nije odabrao/la konkretnu ponudu</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Ponuda 2 (user2) -->
+                <div class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="m-0">{{ trade.user2.username }} traži</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6><a href="{% url 'core:offer_detail' trade.offer2.pk %}">{{ trade.offer2.title }}</a></h6>
+                            <p class="text-muted small">{{ trade.offer2.description|truncatewords:20 }}</p>
+                            <p class="mb-1"><strong>Grad:</strong> {{ trade.offer2.city }}</p>
+                            <p class="mb-1"><strong>Cena:</strong> {{ trade.offer2.price_range }}</p>
+                            <p class="mb-0"><strong>Vlasnik:</strong>
+                                <a href="{% url 'core:user_profile_view' trade.offer2.owner.username %}">
+                                    {{ trade.offer2.owner.username }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEKCIJA: Odaberi ponudu ili opciju otkupa (ako je user2 i offer1 je None) -->
+            {% if trade.status == 'pending' and request.user == trade.user2 and not trade.offer1 %}
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0">🎯 Odaberite ponudu ili opciju</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        <strong>{{ trade.user1.username }}</strong> je zainteresovan/a za vašu ponudu.
+                        Odaberite koje od njegovih/njenih ponuda vam se sviđa, ili ponudite direktan otkup.
+                    </p>
+
+                    <!-- Izbor iz ponuda user1 -->
+                    {% if user1_offers %}
+                    <h6 class="mb-3">📦 Dostupne ponude od <strong>{{ trade.user1.username }}</strong>:</h6>
+                    <div class="row mb-5">
+                        {% for offer in user1_offers %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                {% if offer.image %}
+                                <img src="{{ offer.image.url }}" class="card-img-top" alt="{{ offer.title }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                    <span class="text-white">Bez slike</span>
+                                </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ offer.title }}</h6>
+                                    <p class="card-text small text-muted">{{ offer.description|truncatewords:15 }}</p>
+                                    <p class="mb-1"><strong>Grad:</strong> {{ offer.city }}</p>
+                                    <p class="mb-2"><strong>Cena:</strong> {{ offer.price_range }}</p>
+                                    <form method="POST" action="{% url 'core:accept_trade_with_offer' trade.pk offer.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm w-100">
+                                            ✅ Prihvati ovu ponudu
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-5">
+                        <strong>{{ trade.user1.username }}</strong> nema dostupnih ponuda.
+                        Molim čekajte dok ne objavi nove ponude.
+                    </div>
+                    {% endif %}
+
+                    <!-- OPCIJA ZA OTKUP -->
+                    <hr class="my-4">
+                    <h6 class="mb-3">💳 Opcija za direktan otkup:</h6>
+                    <div class="card border-warning mb-4">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-2">{{ trade.offer2.title }}</h6>
+                                    <p class="text-muted small mb-2">Direktan otkup bez razmene</p>
+                                    <p class="mb-0">
+                                        <strong>Ponuđena cena:</strong>
+                                        <span class="badge bg-warning text-dark fs-6">{{ trade.offer2.price_range }} дин.</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-md-end text-start mt-3 mt-md-0">
+                                    <form method="POST" action="{% url 'core:accept_trade_buy' trade.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning w-100 w-md-auto">
+                                            💰 Kupi za {{ trade.offer2.price_range }} дин.
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Odbij razmenu -->
+                    <div class="text-center">
+                        <a href="{% url 'core:reject_trade' trade.pk %}" class="btn btn-outline-danger">
+                            ❌ Odbij razmenu
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- AKCIJE - Ako je već offer1 odabran -->
+            {% if trade.status == 'pending' and trade.offer1 %}
+            <div class="alert alert-info mb-4">
+                <p class="mb-2"><strong>✅ Ponude su usklađene!</strong></p>
+                <p class="text-muted mb-0">Čekanje finalne odluke od <strong>{{ trade.user2.username }}</strong>...</p>
+            </div>
+            {% endif %}
+
+            <!-- AKCIJE - Razmena je prihvaćena -->
+            {% if trade.status == 'accepted' %}
+            <div class="alert alert-success mb-4">
+                <p class="mb-2"><strong>✅ Razmena je prihvaćena!</strong></p>
+                <p class="text-muted mb-0">Možete završiti razmenu i napisati recenziju.</p>
+                {% if request.user == trade.user1 or request.user == trade.user2 %}
+                <form method="POST" action="{% url 'core:complete_trade' trade.pk %}" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        🏁 Završi razmenu
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- AKCIJE - Razmena je odbijena -->
+            {% if trade.status == 'rejected' %}
+            <div class="alert alert-danger mb-4">
+                <p class="mb-0"><strong>❌ Razmena je odbijena.</strong></p>
+            </div>
+            {% endif %}
+
+            <!-- AKCIJE - Razmena je završena -->
+            {% if trade.status == 'completed' %}
+            <div class="alert alert-success mb-4">
+                <p class="mb-2"><strong>🏁 Razmena je završena!</strong></p>
+                <p class="text-muted mb-3">Hvala na korišćenju naše platforme.</p>
+
+                {% if request.user != trade.user2 %}
+                <p class="mb-2"><strong>Napišite recenziju za {{ trade.user2.username }}:</strong></p>
+                <a href="{% url 'core:add_review' trade.user2.username %}" class="btn btn-primary btn-sm">
+                    ⭐ Napiši recenziju
+                </a>
+                {% endif %}
+
+                {% if request.user != trade.user1 %}
+                <p class="mb-2 mt-3"><strong>Napišite recenziju za {{ trade.user1.username }}:</strong></p>
+                <a href="{% url 'core:add_review' trade.user1.username %}" class="btn btn-primary btn-sm">
+                    ⭐ Napiši recenziju
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar - Info o korisnicima -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="m-0">{{ trade.user1.username }}</h6>
+                </div>
+                <div class="card-body text-center">
+                    <a href="{% url 'core:user_profile_view' trade.user1.username %}" class="btn btn-sm btn-outline-primary">
+                        Vidi profil
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="m-0">{{ trade.user2.username }}</h6>
+                </div>
+                <div class="card-body text-center">
+                    <a href="{% url 'core:user_profile_view' trade.user2.username %}" class="btn btn-sm btn-outline-primary">
+                        Vidi profil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,566 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Moje razmene - BarterApp{% endblock %}
+
+{% block content %}
+<style>
+    /* ==================== PAGE HEADER ==================== */
+    .trades-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px 0;
+        margin: -30px 0 40px 0;
+        border-radius: 0 0 30px 30px;
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+    }
+
+    .trades-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+    }
+
+    .trades-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    /* ==================== SECTION TITLE ==================== */
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin: 50px 0 30px 0;
+        letter-spacing: -0.5px;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 15px;
+        display: inline-block;
+    }
+
+    .section-title i {
+        color: #667eea;
+        margin-right: 10px;
+    }
+
+    /* ==================== TRADE CARD - 4 IN ROW ==================== */
+    .trades-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+        margin-bottom: 50px;
+    }
+
+    .trade-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #f0f4f8;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .trade-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        border-color: #667eea;
+    }
+
+    /* ==================== TRADE HEADER ==================== */
+    .trade-card-header {
+        padding: 15px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .trade-id {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .trade-status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+
+    .status-accepted {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .status-completed {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    /* ==================== TRADE CONTENT ==================== */
+    .trade-card-content {
+        padding: 15px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* ==================== OFFER PAIR ==================== */
+    .offer-pair {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        background: #f7fafc;
+        border-radius: 8px;
+    }
+
+    .offer-item {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .offer-item-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 2px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .offer-item-user {
+        font-size: 0.75rem;
+        color: #718096;
+        margin: 0;
+    }
+
+    .exchange-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+
+    /* ==================== TRADE INFO ==================== */
+    .trade-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        font-size: 0.75rem;
+        padding: 10px 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        color: #a0aec0;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 2px;
+    }
+
+    .info-value {
+        color: #2d3748;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    /* ==================== TRADE MESSAGE ==================== */
+    .trade-message-box {
+        background: #f0f4ff;
+        border-left: 3px solid #667eea;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: #4a5568;
+        font-style: italic;
+        display: none;
+    }
+
+    .trade-message-box.show {
+        display: block;
+    }
+
+    /* ==================== TRADE ACTIONS ==================== */
+    .trade-card-actions {
+        padding: 12px 15px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        gap: 6px;
+        flex-direction: column;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .btn-action i {
+        font-size: 0.7rem;
+    }
+
+    .btn-primary-action {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    .btn-danger-action {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .btn-danger-action:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* ==================== EMPTY STATE ==================== */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .empty-state p {
+        color: #718096;
+        margin-bottom: 30px;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 1400px) {
+        .trades-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .trades-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .trades-header {
+            padding: 40px 0;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .trades-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .trades-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .offer-pair {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .exchange-icon {
+            transform: rotate(90deg);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .trades-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+        }
+
+        .trade-card {
+            border-radius: 10px;
+        }
+
+        .trade-info {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-action {
+            padding: 8px 10px;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<!-- Trades Header -->
+<div class="trades-header">
+    <div class="container">
+        <h1>
+            <i class="fas fa-exchange-alt me-2"></i>Moje razmene
+        </h1>
+        <p>Vidi sve svoje ponude i prihvaćene razmene</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    {% if sent_trades|length > 0 or received_trades|length > 0 %}
+
+    <!-- SENT TRADES -->
+    {% if sent_trades|length > 0 %}
+    <h2 class="section-title">
+        <i class="fas fa-paper-plane"></i>Poslati zahtevi
+    </h2>
+    <div class="trades-grid">
+        {% for trade in sent_trades %}
+        <div class="trade-card">
+            <!-- Header -->
+            <div class="trade-card-header">
+                <span class="trade-id">#{{ trade.id }}</span>
+                <span class="trade-status-badge status-{{ trade.status }}">
+                    {{ trade.get_status_display|truncatewords:1 }}
+                </span>
+            </div>
+
+            <!-- Content -->
+            <div class="trade-card-content">
+                <!-- Offer Pair -->
+                <div class="offer-pair">
+                    <div class="offer-item">
+                        <h4 class="offer-item-title">{{ trade.offer1.title }}</h4>
+                        <p class="offer-item-user">{{ trade.user1.username }}</p>
+                    </div>
+                    <div class="exchange-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="offer-item">
+                        <h4 class="offer-item-title">{{ trade.offer2.title }}</h4>
+                        <p class="offer-item-user">{{ trade.user2.username }}</p>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="trade-info">
+                    <div class="info-item">
+                        <span class="info-label">Kreirano</span>
+                        <span class="info-value">{{ trade.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Vreme</span>
+                        <span class="info-value">{{ trade.created_at|date:"H:i" }}</span>
+                    </div>
+                </div>
+
+                <!-- Message -->
+                {% if trade.message %}
+                <div class="trade-message-box show">
+                    <i class="fas fa-quote-left me-1"></i>{{ trade.message|truncatewords:10 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="trade-card-actions">
+                <a href="{% url 'core:trade_detail' trade.id %}" class="btn-action btn-primary-action">
+                    <i class="fas fa-eye"></i>Detalji
+                </a>
+                {% if trade.status == 'pending' %}
+                <form method="POST" action="{% url 'core:reject_trade' trade.id %}" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-danger-action" onclick="return confirm('Obriši zahtjev?')" style="width: 100%;">
+                        <i class="fas fa-trash"></i>Obriši
+                    </button>
+                </form>
+                {% elif trade.status == 'accepted' %}
+                <form method="POST" action="{% url 'core:complete_trade' trade.id %}" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-primary-action" style="width: 100%;">
+                        <i class="fas fa-check"></i>Završi
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- RECEIVED TRADES -->
+    {% if received_trades|length > 0 %}
+    <h2 class="section-title">
+        <i class="fas fa-inbox"></i>Primljeni zahtevi
+    </h2>
+    <div class="trades-grid">
+        {% for trade in received_trades %}
+        <div class="trade-card">
+            <!-- Header -->
+            <div class="trade-card-header">
+                <span class="trade-id">#{{ trade.id }}</span>
+                <span class="trade-status-badge status-{{ trade.status }}">
+                    {{ trade.get_status_display|truncatewords:1 }}
+                </span>
+            </div>
+
+            <!-- Content -->
+            <div class="trade-card-content">
+                <!-- Offer Pair -->
+                <div class="offer-pair">
+                    <div class="offer-item">
+                        <h4 class="offer-item-title">{{ trade.offer1.title }}</h4>
+                        <p class="offer-item-user">{{ trade.user1.username }}</p>
+                    </div>
+                    <div class="exchange-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="offer-item">
+                        <h4 class="offer-item-title">{{ trade.offer2.title }}</h4>
+                        <p class="offer-item-user">{{ trade.user2.username }}</p>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="trade-info">
+                    <div class="info-item">
+                        <span class="info-label">Kreirano</span>
+                        <span class="info-value">{{ trade.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Vreme</span>
+                        <span class="info-value">{{ trade.created_at|date:"H:i" }}</span>
+                    </div>
+                </div>
+
+                <!-- Message -->
+                {% if trade.message %}
+                <div class="trade-message-box show">
+                    <i class="fas fa-quote-left me-1"></i>{{ trade.message|truncatewords:10 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="trade-card-actions">
+                <a href="{% url 'core:trade_detail' trade.id %}" class="btn-action btn-primary-action">
+                    <i class="fas fa-eye"></i>Detalji
+                </a>
+                {% if trade.status == 'pending' %}
+                <form method="POST" action="{% url 'core:accept_trade' trade.id %}" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-primary-action" style="width: 100%;">
+                        <i class="fas fa-check"></i>Prihvati
+                    </button>
+                </form>
+                <form method="POST" action="{% url 'core:reject_trade' trade.id %}" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-danger-action" onclick="return confirm('Odbij zahtjev?')" style="width: 100%;">
+                        <i class="fas fa-times"></i>Odbi
+                    </button>
+                </form>
+                {% elif trade.status == 'accepted' %}
+                <form method="POST" action="{% url 'core:complete_trade' trade.id %}" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action btn-primary-action" style="width: 100%;">
+                        <i class="fas fa-check"></i>Završi
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-handshake"></i>
+        <h3>Nemaš nijednu razmenu</h3>
+        <p>Kreiraj zahtev za razmenu</p>
+        <a href="{% url 'core:offer_list' %}" class="btn-primary">
+            <i class="fas fa-search me-2"></i>Pronađi ponude
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
