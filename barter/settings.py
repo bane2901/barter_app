@@ -1,14 +1,16 @@
 import os
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv  # CSV() fiksira parsing!
 import dj_database_url
 import logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here')  # OBRISI default u produkciji!
+SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,barter-app-production.railway.app,barterapp-production-95ba.up.railway.app', cast=lambda v: [s.strip() for s in v.split(',')])
+
+# **FIX**: Koristi Csv() umjesto lambda - Railway env parsira savršeno!
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0', cast=Csv())
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -92,9 +94,9 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# ALLAUTH - POPRAVLJENO (bez deprecated)
+# ALLAUTH
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_LOGIN_METHODS = {'email'}  # FIKS: Uklonjen deprecated ACCOUNT_AUTHENTICATION_METHOD
+ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name*', 'last_name', 'password1*', 'password2*']
 ACCOUNT_SIGNUP_FORM_CLASS = 'core.forms.RegistrationForm'
 
@@ -138,13 +140,13 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
 ]
 
-# SECURITY - FIKSIRANO (sve warnings rešeno kada DEBUG=False)
-SECURE_SSL_REDIRECT = True  # FIKS W008
-SECURE_HSTS_SECONDS = 31536000  # FIKS W004
+# SECURITY
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SESSION_COOKIE_SECURE = True  # FIKS W012
-CSRF_COOKIE_SECURE = True  # FIKS W016
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
