@@ -366,3 +366,5 @@ def create_trade_notification(sender, instance, created=False, **kwargs):
             message=f"{instance.user2.username} je odbio vašu razmenu.",
             trade=instance,
         )
+
+icon = models.CharField(max_length=50, default='fa-circle', blank=True)
