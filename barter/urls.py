@@ -35,11 +35,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('', include('core.urls')),
+    # Dodaj ovde ako je u glavnom urls.py, inače u core/urls.py
+    # path('messages/', views.my_messages, name='my_messages'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-
-path('messages/', views.my_messages, name='my_messages'),
