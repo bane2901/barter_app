@@ -3,6 +3,7 @@ from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
 import logging
+import cloudinary
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,6 +23,13 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+# CLOUDINARY CONFIG
+cloudinary.config(
+    cloud_name=config('CLOUDINARY_CLOUD_NAME', default=''),
+    api_key=config('CLOUDINARY_API_KEY', default=''),
+    api_secret=config('CLOUDINARY_API_SECRET', default='')
+)
+
 # INSTALLED APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sites',
+    'cloudinary_storage',
+    'cloudinary',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -116,9 +126,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if os.path.exists(BASE_DIR / 'static') 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# MEDIA FILES
+# MEDIA FILES - CLOUDINARY
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # DEFAULT PRIMARY KEY
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
